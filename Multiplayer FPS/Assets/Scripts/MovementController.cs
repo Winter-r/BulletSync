@@ -1,22 +1,28 @@
+using System.Collections;
 using UnityEngine;
 
 public class MovementController : MonoBehaviour
 {
-	public bool canMove { get; private set; } = true;
-	public bool isSprinting => canSprint && Input.GetKey(sprintKey);
-	private bool shouldJump => controller.isGrounded && Input.GetKeyDown(jumpKey);
+	public bool CanMove { get; private set; } = true;
+	private bool IsSprinting => canSprint && Input.GetKey(sprintKey);
+	private bool ShouldJump => controller.isGrounded && Input.GetKeyDown(jumpKey);
+	private bool ShouldCrouch => !duringCrouchAnimation && controller.isGrounded && Input.GetKeyDown(crouchKey);
 
 	[Header("Functional Options")]
 	[SerializeField] private bool canSprint = true;
 	[SerializeField] private bool canJump = true;
+	[SerializeField] private bool canCrouch = true;
+	[SerializeField] private bool canHeadbob = true;
 
 	[Header("Controls")]
 	[SerializeField] private KeyCode sprintKey = KeyCode.LeftShift;
 	[SerializeField] private KeyCode jumpKey = KeyCode.Space;
+	[SerializeField] private KeyCode crouchKey = KeyCode.LeftControl;
 
 	[Header("Movement Parameters")]
-	[SerializeField] private float walkSpeed = 3.0f;
-	[SerializeField] private float sprintSpeed = 6.0f;
+	[SerializeField] private float walkSpeed = 5.0f;
+	[SerializeField] private float sprintSpeed = 8.0f;
+	[SerializeField] private float crouchSpeed = 2.5f;
 
 	[Header("Look Parameters")]
 	[SerializeField, Range(1, 10)] private float lookSpeedX = 2.0f;
@@ -27,6 +33,25 @@ public class MovementController : MonoBehaviour
 	[Header("Jumping Parameters")]
 	[SerializeField] private float jumpForce = 8.0f;
 	[SerializeField] private float gravity = 30.0f;
+
+	[Header("Crouch Parameters")]
+	[SerializeField] private float crouchHeight = 0.5f;
+	[SerializeField] private float standingHeight = 2f;
+	[SerializeField] private float timeToCrouch = 0.25f;
+	[SerializeField] private Vector3 crouchCenter = new Vector3(0, 0.5f, 0);
+	[SerializeField] private Vector3 standingCenter = new Vector3(0, 0, 0);
+	private bool isCrouching;
+	private bool duringCrouchAnimation;
+
+	[Header("Headbob Parameters")]
+	[SerializeField] private float walkBobSpeed = 14f;
+	[SerializeField] private float walkBobAmount = 0.05f;
+	[SerializeField] private float sprintBobSpeed = 18;
+	[SerializeField] private float sprintBobAmount = 0.1f;
+	[SerializeField] private float crouchBobSpeed = 8f;
+	[SerializeField] private float crouchBobAmount = 0.025f;
+	private float defaultYPos = 0f;
+	private float timer;
 
 	private Camera playerCamera;
 	private CharacterController controller;
@@ -40,21 +65,26 @@ public class MovementController : MonoBehaviour
 	{
 		playerCamera = GetComponentInChildren<Camera>();
 		controller = GetComponent<CharacterController>();
+		defaultYPos = playerCamera.transform.localPosition.y;
 		Cursor.lockState = CursorLockMode.Locked;
 		Cursor.visible = false;
 	}
 
 	private void Update()
 	{
-		if (canMove)
+		if (CanMove)
 		{
 			HandleMovementInput();
 			HandleMouseLook();
-			
+
 			if (canJump)
-			{
 				HandleJump();
-			}
+
+			if (canCrouch)
+				HandleCrouch();
+
+			if (canHeadbob)
+				HandleHeadbob();
 
 			ApplyFinalMovements();
 		}
@@ -62,8 +92,8 @@ public class MovementController : MonoBehaviour
 
 	private void HandleMovementInput()
 	{
-		currentInput = new Vector2((isSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Vertical"),
-								   (isSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Horizontal"));
+		currentInput = new Vector2((isCrouching ? crouchSpeed : IsSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Vertical"),
+								   (isCrouching ? crouchSpeed : IsSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Horizontal"));
 
 		float moveDirectionY = moveDirection.y;
 		moveDirection = (transform.TransformDirection(Vector3.forward) * currentInput.x)
@@ -78,12 +108,63 @@ public class MovementController : MonoBehaviour
 		playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
 		transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeedX, 0);
 	}
-	
+
 	private void HandleJump()
 	{
-		if (shouldJump)
+		if (ShouldJump)
 		{
 			moveDirection.y = jumpForce;
+		}
+	}
+
+	private void HandleCrouch()
+	{
+		if (ShouldCrouch)
+			StartCoroutine(CrouchStand());
+	}
+
+	private IEnumerator CrouchStand()
+	{
+		if (isCrouching && Physics.Raycast(playerCamera.transform.position, Vector3.up, 1f))
+			yield break;
+
+		duringCrouchAnimation = true;
+
+		float timeElapsed = 0;
+		float targetHeight = isCrouching ? standingHeight : crouchHeight;
+		float currentHeight = controller.height;
+		Vector3 targetCenter = isCrouching ? standingCenter : crouchCenter;
+		Vector3 currentCenter = controller.center;
+
+		while (timeElapsed < timeToCrouch)
+		{
+			controller.height = Mathf.Lerp(currentHeight, targetHeight, timeElapsed / timeToCrouch);
+			controller.center = Vector3.Lerp(currentCenter, targetCenter, timeElapsed / timeToCrouch);
+			timeElapsed += Time.deltaTime;
+			yield return null;
+		}
+
+		controller.height = targetHeight;
+		controller.center = targetCenter;
+
+		isCrouching = !isCrouching;
+
+		duringCrouchAnimation = false;
+	}
+
+	private void HandleHeadbob()
+	{
+		if (!controller.isGrounded)
+			return;
+
+		if (Mathf.Abs(moveDirection.x) > 0.1f || Mathf.Abs(moveDirection.z) > 0.1f)
+		{
+			timer += Time.deltaTime * (isCrouching ? crouchBobSpeed : IsSprinting ? sprintBobSpeed : walkBobSpeed);
+			playerCamera.transform.localPosition = new Vector3(
+				playerCamera.transform.localPosition.x,
+				defaultYPos + Mathf.Sin(timer) * (isCrouching ? crouchBobAmount : IsSprinting ? sprintBobAmount : walkBobAmount),
+				playerCamera.transform.localPosition.z
+			);
 		}
 	}
 
@@ -91,6 +172,9 @@ public class MovementController : MonoBehaviour
 	{
 		if (!controller.isGrounded)
 			moveDirection.y -= gravity * Time.deltaTime;
+
+		if (controller.velocity.y < -1 && controller.isGrounded)
+			moveDirection.y = 0;
 
 		controller.Move(moveDirection * Time.deltaTime);
 	}
