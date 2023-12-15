@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class MovementController : MonoBehaviour
 {
+	#region Variables
+	
 	public bool CanMove { get; private set; } = true;
 	private bool IsSprinting => canSprint && !IsSliding && Input.GetKey(sprintKey);
 	private bool ShouldJump => controller.isGrounded && !IsSliding && Input.GetKeyDown(jumpKey);
@@ -16,6 +18,7 @@ public class MovementController : MonoBehaviour
 	[SerializeField] private bool willSlideOnSlopes = true;
 	[SerializeField] private bool canZoom = true;
 	[SerializeField] private bool canInteract = true;
+	[SerializeField] private bool useFootsteps = true;
 
 	[Header("Controls")]
 	[SerializeField] private KeyCode sprintKey = KeyCode.LeftShift;
@@ -65,6 +68,18 @@ public class MovementController : MonoBehaviour
 	private float defaultFOV;
 	private Coroutine zoomRoutine;
 
+	[Header("Footstep Parameters")]
+	[SerializeField] private float baseStepSpeed = 0.5f;
+	[SerializeField] private float crouchStepMultiplier = 1.5f;
+	[SerializeField] private float sprintStepMultiplayer = 0.6f;
+	[SerializeField] private AudioSource footstepAudioSource = default;
+	[SerializeField] private AudioClip[] tileClips = default;
+	[SerializeField] private AudioClip[] woodClips = default;
+	[SerializeField] private AudioClip[] metalClips = default;
+	[SerializeField] private AudioClip[] grassClips = default;
+	private float footstepTimer = 0;
+	private float GetCurrentOffset => isCrouching ? baseStepSpeed * crouchStepMultiplier : IsSprinting ? baseStepSpeed * sprintStepMultiplayer : baseStepSpeed;
+
 	// Sliding Parameters
 	private Vector3 hitPointNormal;
 	private bool IsSliding
@@ -96,6 +111,8 @@ public class MovementController : MonoBehaviour
 	private Vector2 currentInput;
 
 	private float rotationX = 0;
+	
+	#endregion
 
 	private void Awake()
 	{
@@ -126,9 +143,12 @@ public class MovementController : MonoBehaviour
 			if (canZoom)
 				HandleZoom();
 
+			if (useFootsteps)
+				HandleFootsteps();
+
 			if (canInteract)
 			{
-				HandleInteraction();
+				HandleInteractionCheck();
 				HandleInteractionInput();
 			}
 
@@ -210,11 +230,11 @@ public class MovementController : MonoBehaviour
 		}
 	}
 
-	private void HandleInteraction()
+	private void HandleInteractionCheck()
 	{
 		if (Physics.Raycast(playerCamera.ViewportPointToRay(interactionRayPoint), out RaycastHit hit, interactionDistance))
 		{
-			if (hit.collider.gameObject.layer == 9 && (currentInteractable == null || hit.collider.gameObject.GetInstanceID() != currentInteractable.gameObject.GetInstanceID()))
+			if (hit.collider.gameObject.layer == 6 && (currentInteractable == null || hit.collider.gameObject.GetInstanceID() != currentInteractable.gameObject.GetInstanceID()))
 			{
 				hit.collider.TryGetComponent(out currentInteractable);
 
@@ -243,6 +263,41 @@ public class MovementController : MonoBehaviour
 			)
 		{
 			currentInteractable.OnInteract();
+		}
+	}
+
+	private void HandleFootsteps()
+	{
+		if (!controller.isGrounded)
+			return;
+		if (currentInput == Vector2.zero)
+			return;
+
+		footstepTimer -= Time.deltaTime;
+
+		if (footstepTimer <= 0)
+		{
+			footstepAudioSource.pitch = Random.Range(0.9f, 1.1f);
+			if (Physics.Raycast(playerCamera.transform.position, Vector3.down, out RaycastHit hit, 3))
+			{
+				switch (hit.collider.tag)
+				{
+					case "Footsteps/WOOD":
+						footstepAudioSource.PlayOneShot(woodClips[Random.Range(0, woodClips.Length - 1)]);
+						break;
+					case "Footsteps/METAL":
+						footstepAudioSource.PlayOneShot(metalClips[Random.Range(0, metalClips.Length - 1)]);
+						break;
+					case "Footsteps/GRASS":
+						footstepAudioSource.PlayOneShot(grassClips[Random.Range(0, grassClips.Length - 1)]);
+						break;
+					default:
+						footstepAudioSource.PlayOneShot(tileClips[Random.Range(0, tileClips.Length - 1)]);
+						break;
+				}
+			}
+			
+			footstepTimer = GetCurrentOffset;
 		}
 	}
 
