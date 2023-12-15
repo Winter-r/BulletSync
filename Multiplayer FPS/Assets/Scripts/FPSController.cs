@@ -20,6 +20,7 @@ public class FPSController : MonoBehaviour
 	[SerializeField] private bool canZoom = true;
 	[SerializeField] private bool canInteract = true;
 	[SerializeField] private bool useFootsteps = true;
+	[SerializeField] private bool useStamina = true;
 
 	[Header("Controls")]
 	[SerializeField] private KeyCode sprintKey = KeyCode.LeftShift;
@@ -42,7 +43,7 @@ public class FPSController : MonoBehaviour
 
 	[Header("Health Parameters")]
 	[SerializeField] private float maxHealth = 100;
-	[SerializeField] private float timeBeforeRegen = 3;
+	[SerializeField] private float timeBeforeHealthRegen = 3;
 	[SerializeField] private float healthIncrement = 1;
 	[SerializeField] private float healthTimeIncrement = 0.1f;
 	private float currentHealth;
@@ -50,6 +51,16 @@ public class FPSController : MonoBehaviour
 	public static Action<float> OnTakeDamage;
 	public static Action<float> OnDamage;
 	public static Action<float> OnHeal;
+
+	[Header("Stamina Paramaters")]
+	[SerializeField] private float maxStamina = 50;
+	[SerializeField] private float staminaUseMultiplier = 5;
+	[SerializeField] private float timeBeforeStaminaRegen = 5;
+	[SerializeField] private float staminaIncrement = 2;
+	[SerializeField] private float staminaTimeIncrement = 0.1f;
+	private float currentStamina;
+	private Coroutine regeneratingStamina;
+	public static Action<float> OnStaminaChange;
 
 	[Header("Jumping Parameters")]
 	[SerializeField] private float jumpForce = 8.0f;
@@ -143,6 +154,7 @@ public class FPSController : MonoBehaviour
 		defaultYPos = playerCamera.transform.localPosition.y;
 		defaultFOV = playerCamera.fieldOfView;
 		currentHealth = maxHealth;
+		currentStamina = maxStamina;
 		Cursor.lockState = CursorLockMode.Locked;
 		Cursor.visible = false;
 	}
@@ -174,6 +186,9 @@ public class FPSController : MonoBehaviour
 				HandleInteractionCheck();
 				HandleInteractionInput();
 			}
+
+			if (useStamina)
+				HandleStamina();
 
 			ApplyFinalMovements();
 		}
@@ -220,6 +235,33 @@ public class FPSController : MonoBehaviour
 			StopCoroutine(regeneratingHealth);
 
 		print("DEAD");
+	}
+
+	private void HandleStamina()
+	{
+		if (IsSprinting && currentInput != Vector2.zero)
+		{
+			if (regeneratingStamina != null)
+			{
+				StopCoroutine(regeneratingStamina);
+				regeneratingStamina = null;
+			}
+
+			currentStamina -= staminaUseMultiplier * Time.deltaTime;
+
+			if (currentStamina < 0)
+				currentStamina = 0;
+
+			OnStaminaChange?.Invoke(currentStamina);
+
+			if (currentStamina <= 0)
+				canSprint = false;
+		}
+
+		if (!IsSprinting && currentStamina < maxStamina && regeneratingStamina == null)
+		{
+			regeneratingStamina = StartCoroutine(RegenerateStamina());
+		}
 	}
 
 	private void HandleJump()
@@ -396,7 +438,7 @@ public class FPSController : MonoBehaviour
 
 	private IEnumerator RegenerateHealth()
 	{
-		yield return new WaitForSeconds(timeBeforeRegen);
+		yield return new WaitForSeconds(timeBeforeHealthRegen);
 		WaitForSeconds timeToWait = new WaitForSeconds(healthTimeIncrement);
 
 		while (currentHealth < maxHealth)
@@ -411,6 +453,30 @@ public class FPSController : MonoBehaviour
 		}
 
 		regeneratingHealth = null;
+	}
+
+	private IEnumerator RegenerateStamina()
+	{
+		yield return new WaitForSeconds(timeBeforeStaminaRegen);
+		WaitForSeconds timeToWait = new WaitForSeconds(staminaTimeIncrement);
+
+		while (currentStamina < maxStamina)
+		{
+			if (currentStamina > 0)
+				canSprint = true;
+
+			currentStamina += staminaIncrement;
+
+			if (currentStamina > maxStamina)
+				currentStamina = maxStamina;
+
+			OnStaminaChange?.Invoke(currentStamina);
+
+
+			yield return timeToWait;
+		}
+
+		regeneratingStamina = null;
 	}
 
 	private void ApplyFinalMovements()
