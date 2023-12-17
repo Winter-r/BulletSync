@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using UnityEditor.Callbacks;
 using UnityEngine;
 
 public class FPSController : MonoBehaviour
@@ -125,9 +126,17 @@ public class FPSController : MonoBehaviour
 	[SerializeField] private Vector3 interactionRayPoint = default;
 	[SerializeField] private float interactionDistance = default;
 	[SerializeField] private LayerMask interactionLayer = default;
+	[SerializeField] private Transform gunContainer;
 	private Interactable currentInteractable;
 
-	private Camera playerCamera;
+	[Header("Gun Parameters")]
+	[SerializeField] private float dropUpwardForce;
+	[SerializeField] private float dropForwardForce;
+	private Transform currentGunTransform;
+	private Rigidbody currentGunRigidbody;
+	private BoxCollider currentGunCollider;
+
+	public Camera playerCamera;
 	private CharacterController controller;
 
 	private Vector3 moveDirection;
@@ -157,6 +166,7 @@ public class FPSController : MonoBehaviour
 		currentStamina = maxStamina;
 		Cursor.lockState = CursorLockMode.Locked;
 		Cursor.visible = false;
+		InitializeGunReferences();
 	}
 
 	private void Update()
@@ -387,6 +397,66 @@ public class FPSController : MonoBehaviour
 			}
 
 			footstepTimer = GetCurrentOffset;
+		}
+	}
+
+	private void InitializeGunReferences()
+	{
+		// Assuming Gun Container is the immediate child of the player camera
+		Transform gunContainer = playerCamera.transform.Find("Gun Container");
+
+		if (gunContainer != null)
+		{
+			// Assuming the gun is the immediate child of the GunContainer
+			Transform initialGunTransform = gunContainer.GetChild(0);
+
+			if (initialGunTransform != null)
+			{
+				// Get the initial references
+				currentGunTransform = initialGunTransform;
+				currentGunRigidbody = initialGunTransform.GetComponent<Rigidbody>();
+				currentGunCollider = initialGunTransform.GetComponent<BoxCollider>();
+			}
+		}
+	}
+
+	// TODO: Fix Gun Replacement, Read discord
+	public void EquipGun(Transform gunTransform, Rigidbody gunRigidbody, BoxCollider gunCollider)
+	{
+		DropGun();
+
+		gunRigidbody.isKinematic = true;
+		gunCollider.isTrigger = true;
+
+		gunTransform.SetParent(gunContainer);
+
+		gunTransform.localPosition = Vector3.zero;
+		gunTransform.localEulerAngles = Vector3.zero;
+
+		currentGunTransform = gunTransform;
+		currentGunRigidbody = gunRigidbody;
+		currentGunCollider = gunCollider;
+	}
+
+	public void DropGun()
+	{
+		if (currentGunTransform != null && currentGunRigidbody != null && currentGunCollider != null)
+		{
+			currentGunRigidbody.isKinematic = false;
+			currentGunCollider.isTrigger = false;
+
+			currentGunTransform.SetParent(null);
+
+			currentGunRigidbody.AddForce(playerCamera.transform.forward * dropForwardForce, ForceMode.Impulse);
+			currentGunRigidbody.AddForce(playerCamera.transform.up * dropUpwardForce, ForceMode.Impulse);
+
+			float random = UnityEngine.Random.Range(-1f, 1f);
+			currentGunRigidbody.AddTorque(new Vector3(random, random, random) * 10);
+
+			// Reset the references to the currently equipped gun
+			currentGunTransform = null;
+			currentGunRigidbody = null;
+			currentGunCollider = null;
 		}
 	}
 
