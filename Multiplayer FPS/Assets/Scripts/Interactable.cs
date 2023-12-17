@@ -2,7 +2,7 @@ using UnityEngine;
 
 public abstract class Interactable : MonoBehaviour
 {
-	public virtual void Start()
+	public virtual void Awake()
 	{
 		gameObject.layer = 6;
 	}

@@ -1,6 +1,6 @@
 using System;
 using System.Collections;
-using UnityEditor.Callbacks;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class FPSController : MonoBehaviour
@@ -29,6 +29,7 @@ public class FPSController : MonoBehaviour
 	[SerializeField] private KeyCode crouchKey = KeyCode.LeftControl;
 	[SerializeField] private KeyCode interactKey = KeyCode.E;
 	[SerializeField] private KeyCode zoomKey = KeyCode.Mouse1;
+	[SerializeField] private KeyCode[] switchWeapons = { KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3 };
 
 	[Header("Movement Parameters")]
 	[SerializeField] private float walkSpeed = 5.0f;
@@ -126,15 +127,16 @@ public class FPSController : MonoBehaviour
 	[SerializeField] private Vector3 interactionRayPoint = default;
 	[SerializeField] private float interactionDistance = default;
 	[SerializeField] private LayerMask interactionLayer = default;
-	[SerializeField] private Transform gunContainer;
 	private Interactable currentInteractable;
 
-	[Header("Gun Parameters")]
+	[Header("Weapon Parameters")]
 	[SerializeField] private float dropUpwardForce;
 	[SerializeField] private float dropForwardForce;
-	private Transform currentGunTransform;
-	private Rigidbody currentGunRigidbody;
-	private BoxCollider currentGunCollider;
+	private Transform weaponContainer;
+	private List<Transform> equippedWeapons = new List<Transform>();
+	private List<Rigidbody> equippedWeaponRigidbodies = new List<Rigidbody>();
+	private List<BoxCollider> equippedWeaponColliders = new List<BoxCollider>();
+	private int currentWeaponIndex = 0;
 
 	public Camera playerCamera;
 	private CharacterController controller;
@@ -166,7 +168,7 @@ public class FPSController : MonoBehaviour
 		currentStamina = maxStamina;
 		Cursor.lockState = CursorLockMode.Locked;
 		Cursor.visible = false;
-		InitializeGunReferences();
+		InitializeWeaponReferences();
 	}
 
 	private void Update()
@@ -199,6 +201,8 @@ public class FPSController : MonoBehaviour
 
 			if (useStamina)
 				HandleStamina();
+
+			HandleCycleWeaponsInput();
 
 			ApplyFinalMovements();
 		}
@@ -390,6 +394,9 @@ public class FPSController : MonoBehaviour
 					case "Footsteps/GRASS":
 						footstepAudioSource.PlayOneShot(grassClips[UnityEngine.Random.Range(0, grassClips.Length - 1)]);
 						break;
+					case "Footsteps/Tile":
+						footstepAudioSource.PlayOneShot(tileClips[UnityEngine.Random.Range(0, tileClips.Length - 1)]);
+						break;
 					default:
 						footstepAudioSource.PlayOneShot(tileClips[UnityEngine.Random.Range(0, tileClips.Length - 1)]);
 						break;
@@ -400,63 +407,162 @@ public class FPSController : MonoBehaviour
 		}
 	}
 
-	private void InitializeGunReferences()
+	private void InitializeWeaponReferences()
 	{
-		// Assuming Gun Container is the immediate child of the player camera
-		Transform gunContainer = playerCamera.transform.Find("Gun Container");
+		// Assuming Weapon Container is the immediate child of the player camera
+		weaponContainer = playerCamera.transform.Find("Weapon Container");
 
-		if (gunContainer != null)
+		if (weaponContainer != null)
 		{
-			// Assuming the gun is the immediate child of the GunContainer
-			Transform initialGunTransform = gunContainer.GetChild(0);
-
-			if (initialGunTransform != null)
+			for (int i = 0; i < weaponContainer.childCount; i++)
 			{
-				// Get the initial references
-				currentGunTransform = initialGunTransform;
-				currentGunRigidbody = initialGunTransform.GetComponent<Rigidbody>();
-				currentGunCollider = initialGunTransform.GetComponent<BoxCollider>();
+				Transform weaponTransform = weaponContainer.GetChild(i);
+				Rigidbody weaponRigidbody = weaponTransform.GetComponent<Rigidbody>();
+				BoxCollider weaponCollider = weaponTransform.GetComponent<BoxCollider>();
+
+				equippedWeapons.Add(weaponTransform);
+				equippedWeaponRigidbodies.Add(weaponRigidbody);
+				equippedWeaponColliders.Add(weaponCollider);
+
+				// Hide all weapons at the start except the first one
+				SetWeaponVisibility(weaponTransform, i == 0);
+			}
+		}
+
+		for (int i = 0; i < weaponContainer.childCount; i++)
+		{
+			Debug.Log(equippedWeapons[i].name);
+		}
+	}
+
+	public void EquipWeapon(Transform newWeaponTransform, Rigidbody newWeaponRigidbody, BoxCollider newWeaponCollider)
+	{
+		DropWeapon();
+
+		equippedWeapons.Insert(currentWeaponIndex, newWeaponTransform);
+		equippedWeaponRigidbodies.Insert(currentWeaponIndex, newWeaponRigidbody);
+		equippedWeaponColliders.Insert(currentWeaponIndex, newWeaponCollider);
+
+		int newWeaponIndex = currentWeaponIndex;
+
+		Transform weaponTransform = equippedWeapons[newWeaponIndex];
+		Rigidbody weaponRigidbody = equippedWeaponRigidbodies[newWeaponIndex];
+		BoxCollider weaponCollider = equippedWeaponColliders[newWeaponIndex];
+
+		weaponRigidbody.isKinematic = true;
+		weaponCollider.isTrigger = true;
+
+		weaponTransform.SetParent(weaponContainer);
+
+		weaponTransform.localPosition = Vector3.zero;
+		weaponTransform.localEulerAngles = Vector3.zero;
+
+		// Update the currentWeaponIndex
+		currentWeaponIndex = newWeaponIndex;
+
+		// Show the equipped weapon after updating currentWeaponIndex
+		SetWeaponVisibility(weaponTransform, true);
+	}
+
+	public void DropWeapon()
+	{
+		Transform currentWeaponTransform = equippedWeapons[currentWeaponIndex];
+		Rigidbody currentWeaponRigidbody = equippedWeaponRigidbodies[currentWeaponIndex];
+		BoxCollider currentWeaponCollider = equippedWeaponColliders[currentWeaponIndex];
+
+		currentWeaponRigidbody.isKinematic = false;
+		currentWeaponCollider.isTrigger = false;
+
+		currentWeaponTransform.SetParent(null);
+
+		currentWeaponRigidbody.AddForce(playerCamera.transform.forward * dropForwardForce, ForceMode.Impulse);
+		currentWeaponRigidbody.AddForce(playerCamera.transform.up * dropUpwardForce, ForceMode.Impulse);
+
+		float random = UnityEngine.Random.Range(-1f, 1f);
+		currentWeaponRigidbody.AddTorque(new Vector3(random, random, random) * 10);
+
+		equippedWeapons.RemoveAt(currentWeaponIndex);
+		equippedWeaponRigidbodies.RemoveAt(currentWeaponIndex);
+		equippedWeaponColliders.RemoveAt(currentWeaponIndex);
+
+		SetWeaponVisibility(currentWeaponTransform, true);
+	}
+
+	public int GetWeaponIndex(Transform weaponTransform)
+	{
+		return equippedWeapons.IndexOf(weaponTransform);
+	}
+
+	private void HandleCycleWeapons(int newWeaponIndex)
+	{
+		// Check if the new index is different from the current one
+		if (newWeaponIndex != currentWeaponIndex)
+		{
+			// Deactivate the current weapon
+			equippedWeapons[currentWeaponIndex].gameObject.SetActive(false);
+			SetWeaponVisibility(equippedWeapons[currentWeaponIndex].gameObject.transform, false);
+			equippedWeaponRigidbodies[currentWeaponIndex].isKinematic = false;
+			equippedWeaponColliders[currentWeaponIndex].isTrigger = false;
+
+			// Activate the new weapon
+			equippedWeapons[newWeaponIndex].gameObject.SetActive(true);
+			SetWeaponVisibility(equippedWeapons[newWeaponIndex].gameObject.transform, true);
+			equippedWeaponRigidbodies[newWeaponIndex].isKinematic = true;
+			equippedWeaponColliders[newWeaponIndex].isTrigger = true;
+
+			// Update the current weapon index
+			currentWeaponIndex = newWeaponIndex;
+		}
+	}
+
+	private void HandleCycleWeaponsInput()
+	{
+		float scrollInput = Input.GetAxis("Mouse ScrollWheel");
+		int numberKey = -1;
+
+		for (int i = 0; i < switchWeapons.Length; i++)
+		{
+			if (Input.GetKeyDown(switchWeapons[i]))
+			{
+				numberKey = i + 1; // Adding 1 to match weapon indices (assuming they start from 1)
+				break;
+			}
+		}
+
+		if (!Mathf.Approximately(scrollInput, 0) || numberKey != -1)
+		{
+			int scrollDirection = Mathf.RoundToInt(Mathf.Sign(scrollInput)); // 1 for up, -1 for down
+
+			int newWeaponIndex = (currentWeaponIndex + scrollDirection + equippedWeapons.Count) % equippedWeapons.Count;
+
+			if (numberKey != -1)
+			{
+				// If a number key is pressed, directly switch to the corresponding weapon
+				newWeaponIndex = numberKey - 1; // Subtract 1 because weapon indices are typically zero-based
+			}
+
+			// Check if the selected weapon is already active, if not, switch to it
+			if (newWeaponIndex != currentWeaponIndex)
+			{
+				HandleCycleWeapons(newWeaponIndex);
 			}
 		}
 	}
 
-	// TODO: Fix Gun Replacement, Read discord
-	public void EquipGun(Transform gunTransform, Rigidbody gunRigidbody, BoxCollider gunCollider)
+	private void SetWeaponVisibility(Transform weaponTransform, bool visible)
 	{
-		DropGun();
-
-		gunRigidbody.isKinematic = true;
-		gunCollider.isTrigger = true;
-
-		gunTransform.SetParent(gunContainer);
-
-		gunTransform.localPosition = Vector3.zero;
-		gunTransform.localEulerAngles = Vector3.zero;
-
-		currentGunTransform = gunTransform;
-		currentGunRigidbody = gunRigidbody;
-		currentGunCollider = gunCollider;
-	}
-
-	public void DropGun()
-	{
-		if (currentGunTransform != null && currentGunRigidbody != null && currentGunCollider != null)
+		if (weaponTransform != null)
 		{
-			currentGunRigidbody.isKinematic = false;
-			currentGunCollider.isTrigger = false;
+			// Disable/enable MeshRenderers and MeshFilters for child parts
+			foreach (Transform child in weaponTransform)
+			{
+				MeshRenderer meshRenderer = child.GetComponent<MeshRenderer>();
 
-			currentGunTransform.SetParent(null);
-
-			currentGunRigidbody.AddForce(playerCamera.transform.forward * dropForwardForce, ForceMode.Impulse);
-			currentGunRigidbody.AddForce(playerCamera.transform.up * dropUpwardForce, ForceMode.Impulse);
-
-			float random = UnityEngine.Random.Range(-1f, 1f);
-			currentGunRigidbody.AddTorque(new Vector3(random, random, random) * 10);
-
-			// Reset the references to the currently equipped gun
-			currentGunTransform = null;
-			currentGunRigidbody = null;
-			currentGunCollider = null;
+				if (meshRenderer != null)
+				{
+					meshRenderer.enabled = visible;
+				}
+			}
 		}
 	}
 
