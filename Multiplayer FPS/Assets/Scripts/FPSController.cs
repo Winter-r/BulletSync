@@ -30,6 +30,8 @@ public class FPSController : MonoBehaviour
 	[SerializeField] private KeyCode interactKey = KeyCode.E;
 	[SerializeField] private KeyCode zoomKey = KeyCode.Mouse1;
 	[SerializeField] private KeyCode[] switchWeapons = { KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3 };
+	public KeyCode shootingKey = KeyCode.Mouse0;
+	public KeyCode reloadKey = KeyCode.R;
 
 	[Header("Movement Parameters")]
 	[SerializeField] private float walkSpeed = 5.0f;
@@ -135,7 +137,7 @@ public class FPSController : MonoBehaviour
 	private Transform weaponContainer;
 	private List<Transform> equippedWeapons = new List<Transform>();
 	private List<Rigidbody> equippedWeaponRigidbodies = new List<Rigidbody>();
-	private List<BoxCollider> equippedWeaponColliders = new List<BoxCollider>();
+	private List<MeshCollider> equippedWeaponColliders = new List<MeshCollider>();
 	private int currentWeaponIndex = 0;
 
 	public Camera playerCamera;
@@ -227,7 +229,7 @@ public class FPSController : MonoBehaviour
 		transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeedX, 0);
 	}
 
-	private void ApplyDamage(float dmg)
+	public void ApplyDamage(float dmg)
 	{
 		currentHealth -= dmg;
 		OnDamage?.Invoke(currentHealth);
@@ -418,7 +420,7 @@ public class FPSController : MonoBehaviour
 			{
 				Transform weaponTransform = weaponContainer.GetChild(i);
 				Rigidbody weaponRigidbody = weaponTransform.GetComponent<Rigidbody>();
-				BoxCollider weaponCollider = weaponTransform.GetComponent<BoxCollider>();
+				MeshCollider weaponCollider = weaponTransform.GetComponent<MeshCollider>();
 
 				equippedWeapons.Add(weaponTransform);
 				equippedWeaponRigidbodies.Add(weaponRigidbody);
@@ -435,7 +437,7 @@ public class FPSController : MonoBehaviour
 		}
 	}
 
-	public void EquipWeapon(Transform newWeaponTransform, Rigidbody newWeaponRigidbody, BoxCollider newWeaponCollider)
+	public void EquipWeapon(Transform newWeaponTransform, Rigidbody newWeaponRigidbody, MeshCollider newWeaponCollider)
 	{
 		DropWeapon();
 
@@ -447,7 +449,7 @@ public class FPSController : MonoBehaviour
 
 		Transform weaponTransform = equippedWeapons[newWeaponIndex];
 		Rigidbody weaponRigidbody = equippedWeaponRigidbodies[newWeaponIndex];
-		BoxCollider weaponCollider = equippedWeaponColliders[newWeaponIndex];
+		MeshCollider weaponCollider = equippedWeaponColliders[newWeaponIndex];
 
 		weaponRigidbody.isKinematic = true;
 		weaponCollider.isTrigger = true;
@@ -468,7 +470,7 @@ public class FPSController : MonoBehaviour
 	{
 		Transform currentWeaponTransform = equippedWeapons[currentWeaponIndex];
 		Rigidbody currentWeaponRigidbody = equippedWeaponRigidbodies[currentWeaponIndex];
-		BoxCollider currentWeaponCollider = equippedWeaponColliders[currentWeaponIndex];
+		MeshCollider currentWeaponCollider = equippedWeaponColliders[currentWeaponIndex];
 
 		currentWeaponRigidbody.isKinematic = false;
 		currentWeaponCollider.isTrigger = false;
@@ -553,14 +555,20 @@ public class FPSController : MonoBehaviour
 	{
 		if (weaponTransform != null)
 		{
-			// Disable/enable MeshRenderers and MeshFilters for child parts
+			MeshRenderer meshRenderer = weaponTransform.GetComponent<MeshRenderer>();
+			if (meshRenderer != null)
+			{
+				meshRenderer.enabled = visible;
+			}
+			
+			// Disable/enable Mesh Renderers for child parts
 			foreach (Transform child in weaponTransform)
 			{
-				MeshRenderer meshRenderer = child.GetComponent<MeshRenderer>();
+				MeshRenderer childMeshRenderer = child.GetComponent<MeshRenderer>();
 
-				if (meshRenderer != null)
+				if (childMeshRenderer != null)
 				{
-					meshRenderer.enabled = visible;
+					childMeshRenderer.enabled = visible;
 				}
 			}
 		}
