@@ -27,12 +27,20 @@ public class WeaponInteraction : Interactable
 	private bool allowReset = true;
 	private int burstBulletsLeft;
 
+	[Header("Graphics")]
+	[SerializeField] private GameObject muzzleEffect;
+	[SerializeField] private Animator animator;
+	
+	[Header("Sounds")]
+	[SerializeField] private AudioSource gunAudioSource = default;
+	[SerializeField] private AudioClip gunSound = default;
+
 	private FPSController player;
 	private Transform weaponTransform;
 	private Rigidbody weaponRigidbody;
 	private MeshCollider weaponCollider;
 
-	private void Start()
+	private void Awake()
 	{
 		// Find the player controller in the scene
 		player = FindObjectOfType<FPSController>();
@@ -43,6 +51,8 @@ public class WeaponInteraction : Interactable
 
 		readyToShoot = true;
 		burstBulletsLeft = bulletsPerBurst;
+
+		animator = GetComponent<Animator>();
 	}
 
 	private void Update()
@@ -72,6 +82,13 @@ public class WeaponInteraction : Interactable
 
 	private void FireGun()
 	{
+		muzzleEffect.GetComponent<ParticleSystem>().Play();
+		if (animator != null)
+			animator.SetTrigger("Recoil");
+		
+		if (gunSound != null && gunAudioSource != null)
+			gunAudioSource.PlayOneShot(gunSound);
+
 		// Prevents shooting while already shooting, causing player to shoot twice before the first shot ends.
 		readyToShoot = false;
 

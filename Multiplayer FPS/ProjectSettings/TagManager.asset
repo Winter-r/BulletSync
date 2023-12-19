@@ -8,6 +8,7 @@ TagManager:
   - Footsteps/METAL
   - Footsteps/WOOD
   - Footsteps/TILES
+  - Bottle
   layers:
   - Default
   - TransparentFX

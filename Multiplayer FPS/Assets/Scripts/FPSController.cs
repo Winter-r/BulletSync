@@ -555,22 +555,11 @@ public class FPSController : MonoBehaviour
 	{
 		if (weaponTransform != null)
 		{
-			MeshRenderer meshRenderer = weaponTransform.GetComponent<MeshRenderer>();
-			if (meshRenderer != null)
-			{
-				meshRenderer.enabled = visible;
-			}
-			
-			// Disable/enable Mesh Renderers for child parts
-			foreach (Transform child in weaponTransform)
-			{
-				MeshRenderer childMeshRenderer = child.GetComponent<MeshRenderer>();
-
-				if (childMeshRenderer != null)
-				{
-					childMeshRenderer.enabled = visible;
-				}
-			}
+			weaponTransform.gameObject.SetActive(visible);
+		}
+		else
+		{
+			Debug.LogWarning("Trying to set visibility for a null weapon transform.");
 		}
 	}
 
