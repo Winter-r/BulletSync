@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7095447509028923896}
   - component: {fileID: 1850853926190855480}
   - component: {fileID: 6006583242756214424}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: TAN_LR_Scope_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -92,7 +92,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3224321545258001650}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Bullet Spawn Point
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -107,9 +107,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2219779340511403076}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
-  m_LocalPosition: {x: 0.0025001466, y: 0.022500344, z: -0.7135}
-  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.0025001466, y: 0.022500344, z: -0.745}
+  m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7621660104039489733}
@@ -129,13 +129,13 @@ GameObject:
   - component: {fileID: 2154547555066341429}
   - component: {fileID: 7668862415026237717}
   - component: {fileID: 62895987833739391}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: M107
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4987579493002382338
 Transform:
   m_ObjectHideFlags: 0
@@ -269,18 +269,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isGun: 1
+  currentShootingMode: 0
+  shootingDelay: 1
+  spreadIntensity: 0.01
+  magazineSize: 10
+  reloadTime: 4
   bulletPrefab: {fileID: 659783264774492523, guid: a1758907dbb4af1489fd78bd5732a985,
     type: 3}
   bulletSpawn: {fileID: 3224321545258001650}
   bulletVelocity: 100
-  currentShootingMode: 0
-  shootingDelay: 2
   bulletsPerBurst: 1
-  spreadIntensity: 0.01
   muzzleEffect: {fileID: 6156575123640186466}
-  animator: {fileID: 0}
   gunAudioSource: {fileID: 0}
-  gunSound: {fileID: 0}
+  gunFiringSound: {fileID: 0}
+  gunReloadSound: {fileID: 0}
 --- !u!1 &4189292788356667850
 GameObject:
   m_ObjectHideFlags: 0
@@ -292,7 +294,7 @@ GameObject:
   - component: {fileID: 8210680087063092952}
   - component: {fileID: 2385688320249684867}
   - component: {fileID: 5279906345834830646}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Trigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -375,7 +377,7 @@ GameObject:
   - component: {fileID: 6690303834602582880}
   - component: {fileID: 6621147872951786993}
   - component: {fileID: 7278201952329044334}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Bolt
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -458,7 +460,7 @@ GameObject:
   - component: {fileID: 7621660104039489733}
   - component: {fileID: 7910652032517735585}
   - component: {fileID: 3920981538439253423}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MuzzleFlashEffect
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -473,13 +475,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6156575123640186466}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 2.25, y: 15, z: 15}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3224321545258001650}
-  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!198 &7910652032517735585
 ParticleSystem:
   m_ObjectHideFlags: 0
@@ -5241,7 +5243,7 @@ GameObject:
   - component: {fileID: 1890116602609812161}
   - component: {fileID: 7417978293659085006}
   - component: {fileID: 8915613953336568923}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Magazin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5324,7 +5326,7 @@ GameObject:
   - component: {fileID: 8788774587069322948}
   - component: {fileID: 4279772774214847171}
   - component: {fileID: 8086296135536388811}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Rings
   m_TagString: Untagged
   m_Icon: {fileID: 0}

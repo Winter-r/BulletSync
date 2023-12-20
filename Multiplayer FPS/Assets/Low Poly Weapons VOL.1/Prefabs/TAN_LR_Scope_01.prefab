@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4523601712017382}
   - component: {fileID: 33805421945796798}
   - component: {fileID: 23697667482446966}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: TAN_LR_Scope_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -95,7 +95,7 @@ GameObject:
   - component: {fileID: 4589919036242966}
   - component: {fileID: 33746766556658876}
   - component: {fileID: 23644098807867474}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Rings
   m_TagString: Untagged
   m_Icon: {fileID: 0}

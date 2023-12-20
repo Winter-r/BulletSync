@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4195503654972328}
   - component: {fileID: 33144224961271908}
   - component: {fileID: 23170431486699658}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Smoke
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -95,7 +95,7 @@ GameObject:
   - component: {fileID: 4845079189501354}
   - component: {fileID: 33835792720177048}
   - component: {fileID: 23787265943347272}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Pin
   m_TagString: Untagged
   m_Icon: {fileID: 0}

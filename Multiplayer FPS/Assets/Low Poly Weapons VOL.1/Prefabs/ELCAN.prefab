@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4042994505972974}
   - component: {fileID: 33157083520508498}
   - component: {fileID: 23416610787120474}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ELCAN
   m_TagString: Untagged
   m_Icon: {fileID: 0}

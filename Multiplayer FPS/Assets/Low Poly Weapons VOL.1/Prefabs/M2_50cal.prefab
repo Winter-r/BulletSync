@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4489439191758400}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: M2_50cal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -44,7 +44,7 @@ GameObject:
   - component: {fileID: 4380670601264792}
   - component: {fileID: 33373873001899056}
   - component: {fileID: 23233898734152476}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Bolt
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -125,7 +125,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4055907671316448}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: CINEMA_4D_Editor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -158,7 +158,7 @@ GameObject:
   - component: {fileID: 4998328090985282}
   - component: {fileID: 33186544235926124}
   - component: {fileID: 23129609291590706}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Magazin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -241,7 +241,7 @@ GameObject:
   - component: {fileID: 4887218511720300}
   - component: {fileID: 33167410346082344}
   - component: {fileID: 23871503492576128}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -325,7 +325,7 @@ GameObject:
   - component: {fileID: 4910667208535226}
   - component: {fileID: 33059512641947054}
   - component: {fileID: 23508214937475508}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Slide
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -408,7 +408,7 @@ GameObject:
   - component: {fileID: 4873442176732742}
   - component: {fileID: 33725224983764758}
   - component: {fileID: 23325306874568804}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Gun
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -495,7 +495,7 @@ GameObject:
   - component: {fileID: 4481195513322784}
   - component: {fileID: 33901817111618906}
   - component: {fileID: 23632504706873930}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Trigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -578,7 +578,7 @@ GameObject:
   - component: {fileID: 4503388056927176}
   - component: {fileID: 33971149392771662}
   - component: {fileID: 23484694915719162}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: M2
   m_TagString: Untagged
   m_Icon: {fileID: 0}

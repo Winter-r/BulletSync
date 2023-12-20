@@ -1,8 +1,9 @@
 using System;
 using System.Collections;
+using TMPro;
 using UnityEngine;
 
-public class WeaponInteraction : Interactable
+public class Weapon : Interactable
 {
 	public enum ShootingMode
 	{
@@ -11,29 +12,34 @@ public class WeaponInteraction : Interactable
 		Automatic
 	}
 
-	[Header("Bullet Properties")]
+	[Header("Shooting Properties")]
 	[SerializeField] private bool isGun;
+	[SerializeField] private ShootingMode currentShootingMode;
+	[SerializeField] private float shootingDelay = 2f;
+	[SerializeField] private float spreadIntensity;
+	[SerializeField] private int magazineSize;
+	private bool isShooting, readyToShoot;
+	private bool allowReset = true;
+	private bool isReloading;
+	public float reloadTime;
+	private int bulletsLeft;
+	private int burstBulletsLeft;
+
+	[Header("Bullet Properties")]
 	[SerializeField] private GameObject bulletPrefab;
 	[SerializeField] private Transform bulletSpawn;
 	[SerializeField] private float bulletVelocity = 30;
-	private float bulletPrefabLifeTime = 3f;
-
-	[Header("Shooting Properties")]
-	[SerializeField] private ShootingMode currentShootingMode;
-	[SerializeField] private float shootingDelay = 2f;
 	[SerializeField] private int bulletsPerBurst = 3;
-	[SerializeField] private float spreadIntensity;
-	private bool isShooting, readyToShoot;
-	private bool allowReset = true;
-	private int burstBulletsLeft;
+	private float bulletPrefabLifeTime = 3f;
 
 	[Header("Graphics")]
 	[SerializeField] private GameObject muzzleEffect;
-	[SerializeField] private Animator animator;
-	
+	private Animator animator;
+
 	[Header("Sounds")]
 	[SerializeField] private AudioSource gunAudioSource = default;
-	[SerializeField] private AudioClip gunSound = default;
+	[SerializeField] private AudioClip gunFiringSound = default;
+	[SerializeField] private AudioClip gunReloadSound = default;
 
 	private FPSController player;
 	private Transform weaponTransform;
@@ -51,6 +57,7 @@ public class WeaponInteraction : Interactable
 
 		readyToShoot = true;
 		burstBulletsLeft = bulletsPerBurst;
+		bulletsLeft = magazineSize;
 
 		animator = GetComponent<Animator>();
 	}
@@ -58,6 +65,7 @@ public class WeaponInteraction : Interactable
 	private void Update()
 	{
 		HandleFiringInput();
+		UpdateAmmoText();
 	}
 
 	private void HandleFiringInput()
@@ -68,10 +76,20 @@ public class WeaponInteraction : Interactable
 						 ? Input.GetKey(player.shootingKey)
 						 : Input.GetKeyDown(player.shootingKey);
 
-			if (readyToShoot && isShooting)
+			if (readyToShoot && isShooting && bulletsLeft > 0)
 			{
 				burstBulletsLeft = bulletsPerBurst;
 				FireGun();
+			}
+
+			if (Input.GetKeyDown(player.reloadKey) && bulletsLeft < magazineSize && !isReloading)
+			{
+				Reload();
+			}
+
+			if (readyToShoot && !isShooting && !isReloading && bulletsLeft <= 0)
+			{
+				Reload();
 			}
 		}
 		else
@@ -82,12 +100,14 @@ public class WeaponInteraction : Interactable
 
 	private void FireGun()
 	{
+		bulletsLeft--;
+
 		muzzleEffect.GetComponent<ParticleSystem>().Play();
 		if (animator != null)
 			animator.SetTrigger("Recoil");
-		
-		if (gunSound != null && gunAudioSource != null)
-			gunAudioSource.PlayOneShot(gunSound);
+
+		if (gunFiringSound != null && gunAudioSource != null)
+			gunAudioSource.PlayOneShot(gunFiringSound);
 
 		// Prevents shooting while already shooting, causing player to shoot twice before the first shot ends.
 		readyToShoot = false;
@@ -115,6 +135,22 @@ public class WeaponInteraction : Interactable
 			burstBulletsLeft--;
 			Invoke("FireWeapon", shootingDelay);
 		}
+	}
+
+	private void Reload()
+	{
+		if (gunReloadSound != null)
+			gunAudioSource.PlayOneShot(gunReloadSound);
+
+		isReloading = true;
+		// Play Reload Animation
+		Invoke("ReloadComplete", reloadTime);
+	}
+
+	private void ReloadComplete()
+	{
+		bulletsLeft = magazineSize;
+		isReloading = false;
 	}
 
 	private void ResetShot()
@@ -146,6 +182,22 @@ public class WeaponInteraction : Interactable
 	{
 		yield return new WaitForSeconds(delay);
 		Destroy(bullet);
+	}
+
+	private void UpdateAmmoText()
+	{
+		if (isGun)
+		{
+			if (AmmoManager.Instance.ammoText != null)
+			{
+				AmmoManager.Instance.ammoText.enabled = true;
+				AmmoManager.Instance.ammoText.text = $"{bulletsLeft / bulletsPerBurst}/{magazineSize / bulletsPerBurst}";
+			}
+		}
+		else
+		{
+			AmmoManager.Instance.ammoText.enabled = false;
+		}
 	}
 
 	public override void OnInteract()

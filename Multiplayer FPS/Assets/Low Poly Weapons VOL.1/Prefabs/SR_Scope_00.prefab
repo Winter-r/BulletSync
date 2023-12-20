@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4940823143116340}
   - component: {fileID: 33891124818620432}
   - component: {fileID: 23710633582363524}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SR_Scope_00
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -92,7 +92,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4012160720677748}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SR_Scope_00
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -125,7 +125,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4490024712046836}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: CINEMA_4D_Editor
   m_TagString: Untagged
   m_Icon: {fileID: 0}

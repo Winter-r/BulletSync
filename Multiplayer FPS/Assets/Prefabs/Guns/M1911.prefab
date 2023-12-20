@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4006099116283332284}
   - component: {fileID: 9005671531788869440}
   - component: {fileID: 4277289854488554308}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MuzzleFlashEffect
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -26,13 +26,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 456676953316522775}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1.5, y: 10, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3277552015033978964}
-  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!198 &9005671531788869440
 ParticleSystem:
   m_ObjectHideFlags: 0
@@ -4794,7 +4794,7 @@ GameObject:
   - component: {fileID: 2111860976264694527}
   - component: {fileID: 6424253223973648817}
   - component: {fileID: 5299795072703008758}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Hammer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4877,7 +4877,7 @@ GameObject:
   - component: {fileID: 9124233793485785399}
   - component: {fileID: 760360217314746854}
   - component: {fileID: 5633774410128247673}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Slide
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4960,7 +4960,7 @@ GameObject:
   - component: {fileID: 3668099783445096260}
   - component: {fileID: 5884288891549922989}
   - component: {fileID: 2296348532949325034}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Magazin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5041,7 +5041,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3277552015033978964}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BulletSpawnPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5056,14 +5056,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7581082938937651361}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.5, y: 0.5, z: 0.5, w: -0.5}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.0009998381, y: 0.028500862, z: -0.16400003}
-  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
+  m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4006099116283332284}
   m_Father: {fileID: 9052140224823199171}
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: -90}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7742342426156961694
 GameObject:
   m_ObjectHideFlags: 0
@@ -5080,7 +5080,7 @@ GameObject:
   - component: {fileID: 848419720134473879}
   - component: {fileID: 7837344101457682756}
   - component: {fileID: 1663765726427720169}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: M1911
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5095,7 +5095,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7742342426156961694}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -0, z: 0}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
@@ -5219,18 +5219,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isGun: 1
+  currentShootingMode: 0
+  shootingDelay: 0.3
+  spreadIntensity: 0.05
+  magazineSize: 8
+  reloadTime: 1.6
   bulletPrefab: {fileID: 659783264774492523, guid: a1758907dbb4af1489fd78bd5732a985,
     type: 3}
   bulletSpawn: {fileID: 3277552015033978964}
   bulletVelocity: 100
-  currentShootingMode: 0
-  shootingDelay: 0.5
-  bulletsPerBurst: 0
-  spreadIntensity: 0.05
+  bulletsPerBurst: 1
   muzzleEffect: {fileID: 456676953316522775}
-  animator: {fileID: 0}
   gunAudioSource: {fileID: 1663765726427720169}
-  gunSound: {fileID: 8300000, guid: 6ad0adae4969e714fabfa5428081177e, type: 3}
+  gunFiringSound: {fileID: 8300000, guid: 4ebb22f27a1969940b9b6e4c71e00839, type: 3}
+  gunReloadSound: {fileID: 8300000, guid: 31f60a71d66c6664683739de6315c33d, type: 3}
 --- !u!95 &7837344101457682756
 Animator:
   serializedVersion: 5
@@ -5359,7 +5361,7 @@ GameObject:
   - component: {fileID: 1650312529627037094}
   - component: {fileID: 8716672573732958251}
   - component: {fileID: 8233545673379203913}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Trigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
