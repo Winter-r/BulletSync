@@ -92,6 +92,7 @@ public class FPSController : MonoBehaviour
 	[Header("Zoom Parameters")]
 	[SerializeField] private float timeToZoom = 0.3f;
 	[SerializeField] private float zoomFOV = 30f;
+	[HideInInspector] public bool isAiming = false;
 	private float defaultFOV;
 	private Coroutine zoomRoutine;
 
@@ -134,11 +135,11 @@ public class FPSController : MonoBehaviour
 	[Header("Weapon Parameters")]
 	[SerializeField] private float dropUpwardForce;
 	[SerializeField] private float dropForwardForce;
+	[HideInInspector] public List<Transform> equippedWeaponsTransforms = new List<Transform>();
+	[HideInInspector] public List<Rigidbody> equippedWeaponRigidbodies = new List<Rigidbody>();
+	[HideInInspector] public List<MeshCollider> equippedWeaponColliders = new List<MeshCollider>();
+	[HideInInspector] public int currentWeaponIndex = 0;
 	private Transform weaponContainer;
-	private List<Transform> equippedWeapons = new List<Transform>();
-	private List<Rigidbody> equippedWeaponRigidbodies = new List<Rigidbody>();
-	private List<MeshCollider> equippedWeaponColliders = new List<MeshCollider>();
-	private int currentWeaponIndex = 0;
 
 	public Camera playerCamera;
 	private CharacterController controller;
@@ -321,6 +322,7 @@ public class FPSController : MonoBehaviour
 			}
 
 			zoomRoutine = StartCoroutine(ToggleZoom(true));
+			isAiming = true;
 		}
 
 		if (Input.GetKeyUp(zoomKey))
@@ -332,6 +334,7 @@ public class FPSController : MonoBehaviour
 			}
 
 			zoomRoutine = StartCoroutine(ToggleZoom(false));
+			isAiming = false;
 		}
 	}
 
@@ -422,7 +425,7 @@ public class FPSController : MonoBehaviour
 				Rigidbody weaponRigidbody = weaponTransform.GetComponent<Rigidbody>();
 				MeshCollider weaponCollider = weaponTransform.GetComponent<MeshCollider>();
 
-				equippedWeapons.Add(weaponTransform);
+				equippedWeaponsTransforms.Add(weaponTransform);
 				equippedWeaponRigidbodies.Add(weaponRigidbody);
 				equippedWeaponColliders.Add(weaponCollider);
 
@@ -430,24 +433,19 @@ public class FPSController : MonoBehaviour
 				SetWeaponVisibility(weaponTransform, i == 0);
 			}
 		}
-
-		for (int i = 0; i < weaponContainer.childCount; i++)
-		{
-			Debug.Log(equippedWeapons[i].name);
-		}
 	}
 
 	public void EquipWeapon(Transform newWeaponTransform, Rigidbody newWeaponRigidbody, MeshCollider newWeaponCollider)
 	{
 		DropWeapon();
 
-		equippedWeapons.Insert(currentWeaponIndex, newWeaponTransform);
+		equippedWeaponsTransforms.Insert(currentWeaponIndex, newWeaponTransform);
 		equippedWeaponRigidbodies.Insert(currentWeaponIndex, newWeaponRigidbody);
 		equippedWeaponColliders.Insert(currentWeaponIndex, newWeaponCollider);
 
 		int newWeaponIndex = currentWeaponIndex;
 
-		Transform weaponTransform = equippedWeapons[newWeaponIndex];
+		Transform weaponTransform = equippedWeaponsTransforms[newWeaponIndex];
 		Rigidbody weaponRigidbody = equippedWeaponRigidbodies[newWeaponIndex];
 		MeshCollider weaponCollider = equippedWeaponColliders[newWeaponIndex];
 
@@ -464,16 +462,20 @@ public class FPSController : MonoBehaviour
 
 		// Show the equipped weapon after updating currentWeaponIndex
 		SetWeaponVisibility(weaponTransform, true);
+
+		UI.Instance.UpdateWeaponUI();
 	}
 
 	public void DropWeapon()
 	{
-		Transform currentWeaponTransform = equippedWeapons[currentWeaponIndex];
+		Transform currentWeaponTransform = equippedWeaponsTransforms[currentWeaponIndex];
 		Rigidbody currentWeaponRigidbody = equippedWeaponRigidbodies[currentWeaponIndex];
 		MeshCollider currentWeaponCollider = equippedWeaponColliders[currentWeaponIndex];
+		Weapon currentWeaponScript = equippedWeaponsTransforms[currentWeaponIndex].gameObject.GetComponent<Weapon>();
 
 		currentWeaponRigidbody.isKinematic = false;
 		currentWeaponCollider.isTrigger = false;
+		currentWeaponScript.isEquipped = false;
 
 		currentWeaponTransform.SetParent(null);
 
@@ -483,16 +485,14 @@ public class FPSController : MonoBehaviour
 		float random = UnityEngine.Random.Range(-1f, 1f);
 		currentWeaponRigidbody.AddTorque(new Vector3(random, random, random) * 10);
 
-		equippedWeapons.RemoveAt(currentWeaponIndex);
+		equippedWeaponsTransforms.RemoveAt(currentWeaponIndex);
 		equippedWeaponRigidbodies.RemoveAt(currentWeaponIndex);
 		equippedWeaponColliders.RemoveAt(currentWeaponIndex);
-
-		SetWeaponVisibility(currentWeaponTransform, true);
 	}
 
 	public int GetWeaponIndex(Transform weaponTransform)
 	{
-		return equippedWeapons.IndexOf(weaponTransform);
+		return equippedWeaponsTransforms.IndexOf(weaponTransform);
 	}
 
 	private void HandleCycleWeapons(int newWeaponIndex)
@@ -501,14 +501,14 @@ public class FPSController : MonoBehaviour
 		if (newWeaponIndex != currentWeaponIndex)
 		{
 			// Deactivate the current weapon
-			equippedWeapons[currentWeaponIndex].gameObject.SetActive(false);
-			SetWeaponVisibility(equippedWeapons[currentWeaponIndex].gameObject.transform, false);
+			equippedWeaponsTransforms[currentWeaponIndex].gameObject.SetActive(false);
+			SetWeaponVisibility(equippedWeaponsTransforms[currentWeaponIndex].gameObject.transform, false);
 			equippedWeaponRigidbodies[currentWeaponIndex].isKinematic = false;
 			equippedWeaponColliders[currentWeaponIndex].isTrigger = false;
 
 			// Activate the new weapon
-			equippedWeapons[newWeaponIndex].gameObject.SetActive(true);
-			SetWeaponVisibility(equippedWeapons[newWeaponIndex].gameObject.transform, true);
+			equippedWeaponsTransforms[newWeaponIndex].gameObject.SetActive(true);
+			SetWeaponVisibility(equippedWeaponsTransforms[newWeaponIndex].gameObject.transform, true);
 			equippedWeaponRigidbodies[newWeaponIndex].isKinematic = true;
 			equippedWeaponColliders[newWeaponIndex].isTrigger = true;
 
@@ -535,7 +535,7 @@ public class FPSController : MonoBehaviour
 		{
 			int scrollDirection = Mathf.RoundToInt(Mathf.Sign(scrollInput)); // 1 for up, -1 for down
 
-			int newWeaponIndex = (currentWeaponIndex + scrollDirection + equippedWeapons.Count) % equippedWeapons.Count;
+			int newWeaponIndex = (currentWeaponIndex + scrollDirection + equippedWeaponsTransforms.Count) % equippedWeaponsTransforms.Count;
 
 			if (numberKey != -1)
 			{
@@ -555,6 +555,8 @@ public class FPSController : MonoBehaviour
 	{
 		if (weaponTransform != null)
 		{
+			Weapon weaponScript = weaponTransform.gameObject.GetComponent<Weapon>();
+			weaponScript.isEquipped = visible;
 			weaponTransform.gameObject.SetActive(visible);
 		}
 		else
@@ -607,6 +609,8 @@ public class FPSController : MonoBehaviour
 
 		playerCamera.fieldOfView = targetFOV;
 		zoomRoutine = null;
+		
+		isAiming = isEnter;
 	}
 
 	private IEnumerator RegenerateHealth()

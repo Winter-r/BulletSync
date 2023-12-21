@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4006099116283332284}
   - component: {fileID: 9005671531788869440}
   - component: {fileID: 4277289854488554308}
-  m_Layer: 8
+  m_Layer: 2
   m_Name: MuzzleFlashEffect
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4794,7 +4794,7 @@ GameObject:
   - component: {fileID: 2111860976264694527}
   - component: {fileID: 6424253223973648817}
   - component: {fileID: 5299795072703008758}
-  m_Layer: 8
+  m_Layer: 2
   m_Name: Hammer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4877,7 +4877,7 @@ GameObject:
   - component: {fileID: 9124233793485785399}
   - component: {fileID: 760360217314746854}
   - component: {fileID: 5633774410128247673}
-  m_Layer: 8
+  m_Layer: 2
   m_Name: Slide
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4960,7 +4960,7 @@ GameObject:
   - component: {fileID: 3668099783445096260}
   - component: {fileID: 5884288891549922989}
   - component: {fileID: 2296348532949325034}
-  m_Layer: 8
+  m_Layer: 2
   m_Name: Magazin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5041,7 +5041,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3277552015033978964}
-  m_Layer: 8
+  m_Layer: 2
   m_Name: BulletSpawnPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5080,7 +5080,7 @@ GameObject:
   - component: {fileID: 848419720134473879}
   - component: {fileID: 7837344101457682756}
   - component: {fileID: 1663765726427720169}
-  m_Layer: 8
+  m_Layer: 2
   m_Name: M1911
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5178,7 +5178,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 1
   m_CookingOptions: 30
-  m_Mesh: {fileID: -7616858270347262278, guid: 6b87b95460eac2d40b200a355f6444a5, type: 3}
+  m_Mesh: {fileID: 4300000, guid: b812e42521a5a27499e76cc5ed56e3ac, type: 3}
 --- !u!54 &3601555626582215672
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -5219,9 +5219,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isGun: 1
+  isEquipped: 0
+  thisWeaponModel: 2
   currentShootingMode: 0
   shootingDelay: 0.3
   spreadIntensity: 0.05
+  bulletsLeft: 0
+  burstBulletsLeft: 0
+  isShooting: 0
+  readyToShoot: 0
   magazineSize: 8
   reloadTime: 1.6
   bulletPrefab: {fileID: 659783264774492523, guid: a1758907dbb4af1489fd78bd5732a985,
@@ -5233,6 +5239,14 @@ MonoBehaviour:
   gunAudioSource: {fileID: 1663765726427720169}
   gunFiringSound: {fileID: 8300000, guid: 4ebb22f27a1969940b9b6e4c71e00839, type: 3}
   gunReloadSound: {fileID: 8300000, guid: 31f60a71d66c6664683739de6315c33d, type: 3}
+  recoilX: -2
+  recoilY: 3
+  recoilZ: 0.35
+  aimRecoilX: -1
+  aimRecoilY: 0.5
+  aimRecoilZ: 0.175
+  snappiness: 6
+  returnSpeed: 2
 --- !u!95 &7837344101457682756
 Animator:
   serializedVersion: 5
@@ -5361,7 +5375,7 @@ GameObject:
   - component: {fileID: 1650312529627037094}
   - component: {fileID: 8716672573732958251}
   - component: {fileID: 8233545673379203913}
-  m_Layer: 8
+  m_Layer: 2
   m_Name: Trigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}

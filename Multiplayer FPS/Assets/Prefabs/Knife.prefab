@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 3677403748199444719}
   - component: {fileID: 8293948616982526117}
   - component: {fileID: 5401124177554476436}
-  m_Layer: 8
+  m_Layer: 2
   m_Name: Knife
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -148,9 +148,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isGun: 0
+  thisWeaponModel: 4
   currentShootingMode: 0
   shootingDelay: 2
   spreadIntensity: 0
+  bulletsLeft: 0
+  burstBulletsLeft: 0
+  isShooting: 0
+  readyToShoot: 0
   magazineSize: 0
   reloadTime: 0
   bulletPrefab: {fileID: 0}

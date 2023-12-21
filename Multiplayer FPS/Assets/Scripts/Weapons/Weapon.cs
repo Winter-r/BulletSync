@@ -1,6 +1,4 @@
-using System;
 using System.Collections;
-using TMPro;
 using UnityEngine;
 
 public class Weapon : Interactable
@@ -11,25 +9,39 @@ public class Weapon : Interactable
 		Burst,
 		Automatic
 	}
+	public enum WeaponType
+	{
+		AK74,
+		M107,
+		M1911,
+		Benelli_M4,
+		Knife
+	}
+
+	[Header("General Properties")]
+	[SerializeField] private bool isGun;
+	[HideInInspector] public bool isEquipped = false;
+	public WeaponType thisWeaponModel;
+	private CameraRecoil Recoil_Script;
 
 	[Header("Shooting Properties")]
-	[SerializeField] private bool isGun;
 	[SerializeField] private ShootingMode currentShootingMode;
 	[SerializeField] private float shootingDelay = 2f;
 	[SerializeField] private float spreadIntensity;
-	[SerializeField] private int magazineSize;
-	private bool isShooting, readyToShoot;
+	[HideInInspector] public int bulletsLeft;
+	[HideInInspector] public int burstBulletsLeft;
+	[HideInInspector] public bool isShooting;
+	[HideInInspector] public bool readyToShoot;
 	private bool allowReset = true;
 	private bool isReloading;
+	public int magazineSize;
 	public float reloadTime;
-	private int bulletsLeft;
-	private int burstBulletsLeft;
 
 	[Header("Bullet Properties")]
 	[SerializeField] private GameObject bulletPrefab;
 	[SerializeField] private Transform bulletSpawn;
 	[SerializeField] private float bulletVelocity = 30;
-	[SerializeField] private int bulletsPerBurst = 3;
+	public int bulletsPerBurst = 3;
 	private float bulletPrefabLifeTime = 3f;
 
 	[Header("Graphics")]
@@ -40,6 +52,21 @@ public class Weapon : Interactable
 	[SerializeField] private AudioSource gunAudioSource = default;
 	[SerializeField] private AudioClip gunFiringSound = default;
 	[SerializeField] private AudioClip gunReloadSound = default;
+
+	[Header("Recoil")]
+	// Hipfire Recoil
+	public float recoilX;
+	public float recoilY;
+	public float recoilZ;
+
+	// ADS Recoil
+	public float aimRecoilX;
+	public float aimRecoilY;
+	public float aimRecoilZ;
+
+	// Settings
+	public float snappiness;
+	public float returnSpeed;
 
 	private FPSController player;
 	private Transform weaponTransform;
@@ -60,12 +87,12 @@ public class Weapon : Interactable
 		bulletsLeft = magazineSize;
 
 		animator = GetComponent<Animator>();
+		Recoil_Script = GameObject.Find("CameraRotation/CameraRecoil").GetComponent<CameraRecoil>();
 	}
 
 	private void Update()
 	{
 		HandleFiringInput();
-		UpdateAmmoText();
 	}
 
 	private void HandleFiringInput()
@@ -76,7 +103,7 @@ public class Weapon : Interactable
 						 ? Input.GetKey(player.shootingKey)
 						 : Input.GetKeyDown(player.shootingKey);
 
-			if (readyToShoot && isShooting && bulletsLeft > 0)
+			if (isEquipped && readyToShoot && isShooting && bulletsLeft > 0)
 			{
 				burstBulletsLeft = bulletsPerBurst;
 				FireGun();
@@ -102,6 +129,8 @@ public class Weapon : Interactable
 	{
 		bulletsLeft--;
 
+		Recoil_Script.RecoilFire();
+
 		muzzleEffect.GetComponent<ParticleSystem>().Play();
 		if (animator != null)
 			animator.SetTrigger("Recoil");
@@ -112,15 +141,18 @@ public class Weapon : Interactable
 		// Prevents shooting while already shooting, causing player to shoot twice before the first shot ends.
 		readyToShoot = false;
 
-		Vector3 shootingDirection = CalculateSpreadAndDirection().normalized;
+		for (int i = 0; i < bulletsPerBurst; i++)
+		{
+			Vector3 shootingDirection = CalculateSpreadAndDirection().normalized;
 
-		GameObject bullet = Instantiate(bulletPrefab, bulletSpawn.position, Quaternion.identity);
+			GameObject bullet = Instantiate(bulletPrefab, bulletSpawn.position, Quaternion.identity);
 
-		bullet.transform.forward = shootingDirection;
+			bullet.transform.forward = shootingDirection;
 
-		bullet.GetComponent<Rigidbody>().AddForce(shootingDirection * bulletVelocity, ForceMode.Impulse);
+			bullet.GetComponent<Rigidbody>().AddForce(shootingDirection * bulletVelocity, ForceMode.Impulse);
 
-		StartCoroutine(DestroyBullet(bullet, bulletPrefabLifeTime));
+			StartCoroutine(DestroyBullet(bullet, bulletPrefabLifeTime));
+		}
 
 		// Check if we are done shooting
 		if (allowReset)
@@ -172,8 +204,8 @@ public class Weapon : Interactable
 
 		Vector3 direction = targetPoint - bulletSpawn.position;
 
-		float x = UnityEngine.Random.Range(-spreadIntensity, spreadIntensity);
-		float y = UnityEngine.Random.Range(-spreadIntensity, spreadIntensity);
+		float x = Random.Range(-spreadIntensity, spreadIntensity);
+		float y = Random.Range(-spreadIntensity, spreadIntensity);
 
 		return direction + new Vector3(x, y, 0);
 	}
@@ -182,22 +214,6 @@ public class Weapon : Interactable
 	{
 		yield return new WaitForSeconds(delay);
 		Destroy(bullet);
-	}
-
-	private void UpdateAmmoText()
-	{
-		if (isGun)
-		{
-			if (AmmoManager.Instance.ammoText != null)
-			{
-				AmmoManager.Instance.ammoText.enabled = true;
-				AmmoManager.Instance.ammoText.text = $"{bulletsLeft / bulletsPerBurst}/{magazineSize / bulletsPerBurst}";
-			}
-		}
-		else
-		{
-			AmmoManager.Instance.ammoText.enabled = false;
-		}
 	}
 
 	public override void OnInteract()
