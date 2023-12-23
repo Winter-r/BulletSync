@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -22,18 +23,18 @@ public class Weapon : Interactable
 	[SerializeField] private bool isGun;
 	[HideInInspector] public bool isEquipped = false;
 	public WeaponType thisWeaponModel;
-	private CameraRecoil Recoil_Script;
+	private CameraRecoil recoilScript;
+	private Outline outline;
 
 	[Header("Shooting Properties")]
 	[SerializeField] private ShootingMode currentShootingMode;
 	[SerializeField] private float shootingDelay = 2f;
-	[SerializeField] private float spreadIntensity;
 	[HideInInspector] public int bulletsLeft;
 	[HideInInspector] public int burstBulletsLeft;
 	[HideInInspector] public bool isShooting;
 	[HideInInspector] public bool readyToShoot;
+	[HideInInspector] public bool isReloading;
 	private bool allowReset = true;
-	private bool isReloading;
 	public int magazineSize;
 	public float reloadTime;
 
@@ -43,6 +44,15 @@ public class Weapon : Interactable
 	[SerializeField] private float bulletVelocity = 30;
 	public int bulletsPerBurst = 3;
 	private float bulletPrefabLifeTime = 3f;
+
+	[Header("Spread")]
+	[SerializeField] private float hipSpreadIntensity;
+	[SerializeField] private float adsSpreadIntensity;
+	private float spreadIntensity;
+
+	[Header("ADS")]
+	[SerializeField] private float adsSpeed;
+	private bool isADS;
 
 	[Header("Graphics")]
 	[SerializeField] private GameObject muzzleEffect;
@@ -81,23 +91,28 @@ public class Weapon : Interactable
 		weaponTransform = GetComponent<Transform>();
 		weaponRigidbody = GetComponent<Rigidbody>();
 		weaponCollider = GetComponent<MeshCollider>();
+		animator = GetComponent<Animator>();
+		outline = GetComponent<Outline>();
 
+		outline.enabled = false;
 		readyToShoot = true;
 		burstBulletsLeft = bulletsPerBurst;
 		bulletsLeft = magazineSize;
+		spreadIntensity = hipSpreadIntensity;
 
-		animator = GetComponent<Animator>();
-		Recoil_Script = GameObject.Find("CameraRotation/CameraRecoil").GetComponent<CameraRecoil>();
+		recoilScript = GameObject.Find("CameraRotation/CameraRecoil").GetComponent<CameraRecoil>();
 	}
 
 	private void Update()
 	{
+		animator.enabled = isEquipped;
 		HandleFiringInput();
+		HandleADSInput();
 	}
 
 	private void HandleFiringInput()
 	{
-		if (isGun)
+		if (isGun && isEquipped)
 		{
 			isShooting = currentShootingMode == ShootingMode.Automatic
 						 ? Input.GetKey(player.shootingKey)
@@ -129,11 +144,18 @@ public class Weapon : Interactable
 	{
 		bulletsLeft--;
 
-		Recoil_Script.RecoilFire();
+		recoilScript.RecoilFire();
 
 		muzzleEffect.GetComponent<ParticleSystem>().Play();
-		if (animator != null)
+
+		if (isADS)
+		{
+			animator.SetTrigger("recoilADS");
+		}
+		else
+		{
 			animator.SetTrigger("Recoil");
+		}
 
 		if (gunFiringSound != null && gunAudioSource != null)
 			gunAudioSource.PlayOneShot(gunFiringSound);
@@ -175,7 +197,7 @@ public class Weapon : Interactable
 			gunAudioSource.PlayOneShot(gunReloadSound);
 
 		isReloading = true;
-		// Play Reload Animation
+		// Play Reload Animation Here
 		Invoke("ReloadComplete", reloadTime);
 	}
 
@@ -204,10 +226,10 @@ public class Weapon : Interactable
 
 		Vector3 direction = targetPoint - bulletSpawn.position;
 
-		float x = Random.Range(-spreadIntensity, spreadIntensity);
-		float y = Random.Range(-spreadIntensity, spreadIntensity);
+		float z = UnityEngine.Random.Range(-spreadIntensity, spreadIntensity);
+		float y = UnityEngine.Random.Range(-spreadIntensity, spreadIntensity);
 
-		return direction + new Vector3(x, y, 0);
+		return direction + new Vector3(0, y, z);
 	}
 
 	private IEnumerator DestroyBullet(GameObject bullet, float delay)
@@ -216,18 +238,52 @@ public class Weapon : Interactable
 		Destroy(bullet);
 	}
 
+	private void HandleADSInput()
+	{
+		if (Input.GetKeyDown(player.ADSKey))
+			EnterADS();
+
+
+		if (Input.GetKeyUp(player.ADSKey))
+			ExitADS();
+
+	}
+
+	private void EnterADS()
+	{
+		isADS = true;
+		animator.SetTrigger("enterADS");
+		player.playerCamera.GetComponent<Animator>().SetTrigger("zoomIn");
+		UI.Instance.crossHair.SetActive(false);
+		spreadIntensity = adsSpreadIntensity;
+	}
+
+	private void ExitADS()
+	{
+		isADS = false;
+		animator.SetTrigger("exitADS");
+		player.playerCamera.GetComponent<Animator>().SetTrigger("zoomOut");
+		UI.Instance.crossHair.SetActive(true);
+		spreadIntensity = hipSpreadIntensity;
+	}
+
 	public override void OnInteract()
 	{
-		player.EquipWeapon(weaponTransform, weaponRigidbody, weaponCollider);
+		player.EquipWeapon(weaponTransform, weaponRigidbody, weaponCollider, animator);
 	}
 
 	public override void OnFocus()
 	{
-		Debug.Log("LOOKING AT " + gameObject.name);
+		if (!isEquipped)
+		{
+			outline.enabled = true;
+		}
 	}
 
 	public override void OnLoseFocus()
 	{
-		Debug.Log("STOPPED LOOKING AT " + gameObject.name);
+		// You stopped here, figure out why OnLoseFocus isn't being called
+		outline.enabled = false;
+		Debug.Log("Lost Focus on" + gameObject.name);
 	}
 }

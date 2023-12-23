@@ -16,11 +16,11 @@ public class UI : MonoBehaviour
 	public TextMeshProUGUI magazineAmmoUI;
 	public Image ammoTypeUI;
 
-	[Header("Weapon")]
-	public Weapon activeWeapon;
-	public Weapon[] inactiveWeapons;
-	public Image activeWeaponUI;
+	[Header("Weapons")]
 	public Image[] inactiveWeaponsUI;
+	public Image activeWeaponUI;
+	private Weapon activeWeapon;
+	private Weapon[] inactiveWeapons;
 
 	[Header("Throwables")]
 	[Header("Lethal")]
@@ -44,7 +44,10 @@ public class UI : MonoBehaviour
 	private GameObject sniperAmmoSprite;
 	private GameObject shotgunAmmoSprite;
 	private GameObject noAmmoSprite;
+	
 	public Sprite emptySlot;
+	
+	public GameObject crossHair;
 
 	private void OnEnable()
 	{

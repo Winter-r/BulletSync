@@ -15,7 +15,9 @@ GameObject:
   - component: {fileID: 5032879074340358329}
   - component: {fileID: 1866014873833666864}
   - component: {fileID: 632125170833016401}
-  m_Layer: 2
+  - component: {fileID: 2550329002233463071}
+  - component: {fileID: 1558948770743760901}
+  m_Layer: 8
   m_Name: Benelli_M4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -276,6 +278,45 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!95 &2550329002233463071
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1131584246113923597}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1558948770743760901
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1131584246113923597}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  outlineMode: 0
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
+  outlineWidth: 4
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []
 --- !u!1 &2462083424752684840
 GameObject:
   m_ObjectHideFlags: 0
@@ -287,7 +328,7 @@ GameObject:
   - component: {fileID: 3584906803756228687}
   - component: {fileID: 8397656331647208902}
   - component: {fileID: 5870839697053035745}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: Pump
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -370,7 +411,7 @@ GameObject:
   - component: {fileID: 733905900267016839}
   - component: {fileID: 4316934257039842098}
   - component: {fileID: 6742062797360288251}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: Trigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -451,7 +492,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4323293876016735442}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: Bullet Spawn Point
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -485,7 +526,7 @@ GameObject:
   - component: {fileID: 5813836385567749200}
   - component: {fileID: 2858548774289175150}
   - component: {fileID: 3422748792341825904}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: MuzzleFlashEffect
   m_TagString: Untagged
   m_Icon: {fileID: 0}

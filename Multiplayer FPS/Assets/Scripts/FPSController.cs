@@ -18,7 +18,6 @@ public class FPSController : MonoBehaviour
 	[SerializeField] private bool canCrouch = true;
 	[SerializeField] private bool canHeadbob = true;
 	[SerializeField] private bool willSlideOnSlopes = true;
-	[SerializeField] private bool canZoom = true;
 	[SerializeField] private bool canInteract = true;
 	[SerializeField] private bool useFootsteps = true;
 	[SerializeField] private bool useStamina = true;
@@ -28,8 +27,8 @@ public class FPSController : MonoBehaviour
 	[SerializeField] private KeyCode jumpKey = KeyCode.Space;
 	[SerializeField] private KeyCode crouchKey = KeyCode.LeftControl;
 	[SerializeField] private KeyCode interactKey = KeyCode.E;
-	[SerializeField] private KeyCode zoomKey = KeyCode.Mouse1;
 	[SerializeField] private KeyCode[] switchWeapons = { KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3 };
+	public KeyCode ADSKey = KeyCode.Mouse1;
 	public KeyCode shootingKey = KeyCode.Mouse0;
 	public KeyCode reloadKey = KeyCode.R;
 
@@ -89,13 +88,6 @@ public class FPSController : MonoBehaviour
 	private float defaultYPos = 0f;
 	private float timer;
 
-	[Header("Zoom Parameters")]
-	[SerializeField] private float timeToZoom = 0.3f;
-	[SerializeField] private float zoomFOV = 30f;
-	[HideInInspector] public bool isAiming = false;
-	private float defaultFOV;
-	private Coroutine zoomRoutine;
-
 	[Header("Footstep Parameters")]
 	[SerializeField] private float baseStepSpeed = 0.5f;
 	[SerializeField] private float crouchStepMultiplier = 1.5f;
@@ -138,10 +130,16 @@ public class FPSController : MonoBehaviour
 	[HideInInspector] public List<Transform> equippedWeaponsTransforms = new List<Transform>();
 	[HideInInspector] public List<Rigidbody> equippedWeaponRigidbodies = new List<Rigidbody>();
 	[HideInInspector] public List<MeshCollider> equippedWeaponColliders = new List<MeshCollider>();
+	[HideInInspector] public List<Animator> equippedWeaponsAnimators = new List<Animator>();
 	[HideInInspector] public int currentWeaponIndex = 0;
+	[HideInInspector] public bool isAiming;
 	private Transform weaponContainer;
 
-	public Camera playerCamera;
+	[Header("Camera/ADS")]
+	[HideInInspector] public Camera playerCamera;
+	[HideInInspector] public float defaultFOV;
+	public float targetFOV;
+	
 	private CharacterController controller;
 
 	private Vector3 moveDirection;
@@ -190,9 +188,6 @@ public class FPSController : MonoBehaviour
 			if (canHeadbob)
 				HandleHeadbob();
 
-			if (canZoom)
-				HandleZoom();
-
 			if (useFootsteps)
 				HandleFootsteps();
 
@@ -206,7 +201,6 @@ public class FPSController : MonoBehaviour
 				HandleStamina();
 
 			HandleCycleWeaponsInput();
-
 			ApplyFinalMovements();
 		}
 	}
@@ -215,7 +209,6 @@ public class FPSController : MonoBehaviour
 	{
 		currentInput = new Vector2((isCrouching ? crouchSpeed : IsSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Vertical"),
 								   (isCrouching ? crouchSpeed : IsSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Horizontal"));
-
 		float moveDirectionY = moveDirection.y;
 		moveDirection = (transform.TransformDirection(Vector3.forward) * currentInput.x)
 						+ (transform.TransformDirection(Vector3.right) * currentInput.y);
@@ -291,8 +284,10 @@ public class FPSController : MonoBehaviour
 
 	private void HandleCrouch()
 	{
+
 		if (ShouldCrouch)
-			StartCoroutine(CrouchStand());
+				// Regular crouch action
+				StartCoroutine(CrouchStand());
 	}
 
 	private void HandleHeadbob()
@@ -308,33 +303,6 @@ public class FPSController : MonoBehaviour
 				defaultYPos + Mathf.Sin(timer) * (isCrouching ? crouchBobAmount : IsSprinting ? sprintBobAmount : walkBobAmount),
 				playerCamera.transform.localPosition.z
 			);
-		}
-	}
-
-	private void HandleZoom()
-	{
-		if (Input.GetKeyDown(zoomKey))
-		{
-			if (zoomRoutine != null)
-			{
-				StopCoroutine(zoomRoutine);
-				zoomRoutine = null;
-			}
-
-			zoomRoutine = StartCoroutine(ToggleZoom(true));
-			isAiming = true;
-		}
-
-		if (Input.GetKeyUp(zoomKey))
-		{
-			if (zoomRoutine != null)
-			{
-				StopCoroutine(zoomRoutine);
-				zoomRoutine = null;
-			}
-
-			zoomRoutine = StartCoroutine(ToggleZoom(false));
-			isAiming = false;
 		}
 	}
 
@@ -424,10 +392,12 @@ public class FPSController : MonoBehaviour
 				Transform weaponTransform = weaponContainer.GetChild(i);
 				Rigidbody weaponRigidbody = weaponTransform.GetComponent<Rigidbody>();
 				MeshCollider weaponCollider = weaponTransform.GetComponent<MeshCollider>();
+				Animator weaponAnimator = weaponTransform.GetComponent<Animator>();
 
 				equippedWeaponsTransforms.Add(weaponTransform);
 				equippedWeaponRigidbodies.Add(weaponRigidbody);
 				equippedWeaponColliders.Add(weaponCollider);
+				equippedWeaponsAnimators.Add(weaponAnimator);
 
 				// Hide all weapons at the start except the first one
 				SetWeaponVisibility(weaponTransform, i == 0);
@@ -435,22 +405,25 @@ public class FPSController : MonoBehaviour
 		}
 	}
 
-	public void EquipWeapon(Transform newWeaponTransform, Rigidbody newWeaponRigidbody, MeshCollider newWeaponCollider)
+	public void EquipWeapon(Transform newWeaponTransform, Rigidbody newWeaponRigidbody, MeshCollider newWeaponCollider, Animator newWeaponAnimator)
 	{
 		DropWeapon();
 
 		equippedWeaponsTransforms.Insert(currentWeaponIndex, newWeaponTransform);
 		equippedWeaponRigidbodies.Insert(currentWeaponIndex, newWeaponRigidbody);
 		equippedWeaponColliders.Insert(currentWeaponIndex, newWeaponCollider);
+		equippedWeaponsAnimators.Insert(currentWeaponIndex, newWeaponAnimator);
 
 		int newWeaponIndex = currentWeaponIndex;
 
 		Transform weaponTransform = equippedWeaponsTransforms[newWeaponIndex];
 		Rigidbody weaponRigidbody = equippedWeaponRigidbodies[newWeaponIndex];
 		MeshCollider weaponCollider = equippedWeaponColliders[newWeaponIndex];
+		Animator weaponAnimator = equippedWeaponsAnimators[newWeaponIndex];
 
 		weaponRigidbody.isKinematic = true;
 		weaponCollider.isTrigger = true;
+		weaponAnimator.enabled = true;
 
 		weaponTransform.SetParent(weaponContainer);
 
@@ -471,10 +444,12 @@ public class FPSController : MonoBehaviour
 		Transform currentWeaponTransform = equippedWeaponsTransforms[currentWeaponIndex];
 		Rigidbody currentWeaponRigidbody = equippedWeaponRigidbodies[currentWeaponIndex];
 		MeshCollider currentWeaponCollider = equippedWeaponColliders[currentWeaponIndex];
+		Animator currentWeaponAnimator = equippedWeaponsAnimators[currentWeaponIndex];
 		Weapon currentWeaponScript = equippedWeaponsTransforms[currentWeaponIndex].gameObject.GetComponent<Weapon>();
 
 		currentWeaponRigidbody.isKinematic = false;
 		currentWeaponCollider.isTrigger = false;
+		currentWeaponAnimator.enabled = false;
 		currentWeaponScript.isEquipped = false;
 
 		currentWeaponTransform.SetParent(null);
@@ -488,6 +463,7 @@ public class FPSController : MonoBehaviour
 		equippedWeaponsTransforms.RemoveAt(currentWeaponIndex);
 		equippedWeaponRigidbodies.RemoveAt(currentWeaponIndex);
 		equippedWeaponColliders.RemoveAt(currentWeaponIndex);
+		equippedWeaponsAnimators.RemoveAt(currentWeaponIndex);
 	}
 
 	public int GetWeaponIndex(Transform weaponTransform)
@@ -592,25 +568,6 @@ public class FPSController : MonoBehaviour
 		isCrouching = !isCrouching;
 
 		duringCrouchAnimation = false;
-	}
-
-	private IEnumerator ToggleZoom(bool isEnter)
-	{
-		float targetFOV = isEnter ? zoomFOV : defaultFOV;
-		float startingFOV = playerCamera.fieldOfView;
-		float timeElapsed = 0;
-
-		while (timeElapsed < timeToZoom)
-		{
-			playerCamera.fieldOfView = Mathf.Lerp(startingFOV, targetFOV, timeElapsed / timeToZoom);
-			timeElapsed += Time.deltaTime;
-			yield return null;
-		}
-
-		playerCamera.fieldOfView = targetFOV;
-		zoomRoutine = null;
-		
-		isAiming = isEnter;
 	}
 
 	private IEnumerator RegenerateHealth()
