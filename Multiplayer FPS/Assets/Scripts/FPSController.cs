@@ -78,6 +78,9 @@ public class FPSController : MonoBehaviour
 	private bool isCrouching;
 	private bool duringCrouchAnimation;
 
+	// Animations
+	private Animator playerAnimator;
+
 	[Header("Headbob Parameters")]
 	[SerializeField] private float walkBobSpeed = 14f;
 	[SerializeField] private float walkBobAmount = 0.05f;
@@ -139,7 +142,7 @@ public class FPSController : MonoBehaviour
 	[HideInInspector] public Camera playerCamera;
 	[HideInInspector] public float defaultFOV;
 	public float targetFOV;
-	
+
 	private CharacterController controller;
 
 	private Vector3 moveDirection;
@@ -163,12 +166,15 @@ public class FPSController : MonoBehaviour
 	{
 		playerCamera = GetComponentInChildren<Camera>();
 		controller = GetComponent<CharacterController>();
+		playerAnimator = GetComponent<Animator>();
+
 		defaultYPos = playerCamera.transform.localPosition.y;
 		defaultFOV = playerCamera.fieldOfView;
 		currentHealth = maxHealth;
 		currentStamina = maxStamina;
 		Cursor.lockState = CursorLockMode.Locked;
 		Cursor.visible = false;
+
 		InitializeWeaponReferences();
 	}
 
@@ -213,6 +219,8 @@ public class FPSController : MonoBehaviour
 		moveDirection = (transform.TransformDirection(Vector3.forward) * currentInput.x)
 						+ (transform.TransformDirection(Vector3.right) * currentInput.y);
 		moveDirection.y = moveDirectionY;
+		playerAnimator.SetFloat("X_Velocity", currentInput.x);
+		playerAnimator.SetFloat("Y_Velocity", currentInput.y);
 	}
 
 	private void HandleMouseLook()
@@ -284,10 +292,11 @@ public class FPSController : MonoBehaviour
 
 	private void HandleCrouch()
 	{
-
 		if (ShouldCrouch)
-				// Regular crouch action
-				StartCoroutine(CrouchStand());
+		{
+			// Regular crouch action
+			StartCoroutine(CrouchStand());
+		}
 	}
 
 	private void HandleHeadbob()
