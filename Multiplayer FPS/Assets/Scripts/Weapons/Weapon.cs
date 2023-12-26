@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using UnityEngine;
 
@@ -18,6 +17,8 @@ public class Weapon : Interactable
 		Benelli_M4,
 		Knife
 	}
+
+	#region Variables
 
 	[Header("General Properties")]
 	[SerializeField] private bool isGun;
@@ -78,15 +79,19 @@ public class Weapon : Interactable
 	public float snappiness;
 	public float returnSpeed;
 
+	// References
+	private RoomManager roomManager;
 	private FPSController player;
 	private Transform weaponTransform;
 	private Rigidbody weaponRigidbody;
 	private MeshCollider weaponCollider;
 
+	#endregion
+	
 	private void Awake()
 	{
-		// Find the player controller in the scene
-		player = FindObjectOfType<FPSController>();
+		roomManager = FindObjectOfType<RoomManager>();
+		roomManager.player.GetComponent<FPSController>();
 
 		weaponTransform = GetComponent<Transform>();
 		weaponRigidbody = GetComponent<Rigidbody>();
@@ -105,9 +110,13 @@ public class Weapon : Interactable
 
 	private void Update()
 	{
+		if (player != null)
+		{
+			HandleFiringInput();
+			HandleADSInput();
+		}
+		
 		animator.enabled = isEquipped;
-		HandleFiringInput();
-		HandleADSInput();
 	}
 
 	private void HandleFiringInput()
