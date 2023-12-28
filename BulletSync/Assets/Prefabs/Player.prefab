@@ -3361,7 +3361,7 @@ GameObject:
   - component: {fileID: 7105913248407115729}
   - component: {fileID: 7954147704929373820}
   m_Layer: 9
-  m_Name: SK_FP_CH_Default_Root
+  m_Name: Default Root
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
