@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.InputSystem;
+using Photon.Pun;
 
 namespace BulletSync.Character
 {
@@ -90,6 +91,8 @@ namespace BulletSync.Character
 		private bool tutorialTextVisible;
 		// True if the game cursor is locked! Used when pressing "Escape" to allow developers to more easily access the editor.
 		private bool cursorLocked;
+		// PhotonView Component
+		private PhotonView view;
 
 		#endregion
 
@@ -118,6 +121,8 @@ namespace BulletSync.Character
 
 			//Cache the CharacterKinematics component.
 			characterKinematics = GetComponent<CharacterKinematics>();
+			//Cache the PhotonView component
+			view = GetComponent<PhotonView>();
 
 			//Initialize Inventory.
 			inventory.Init();
@@ -192,6 +197,8 @@ namespace BulletSync.Character
 		public override bool IsCursorLocked() => cursorLocked;
 
 		public override bool IsTutorialTextVisible() => tutorialTextVisible;
+
+		public override PhotonView GetPhotonView() => view;
 
 		public override Vector2 GetInputMovement() => axisMovement;
 		public override Vector2 GetInputLook() => axisLook;

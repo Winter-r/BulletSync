@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Photon.Pun;
+using UnityEngine;
 
 namespace BulletSync.Character
 {
@@ -44,6 +45,9 @@ namespace BulletSync.Character
 
 		// Returns the Look Input.
 		public abstract Vector2 GetInputLook();
+		
+		// Returns the PhotonView Component
+		public abstract PhotonView GetPhotonView();
 		
 		#endregion
 
