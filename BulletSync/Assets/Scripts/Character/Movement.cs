@@ -91,30 +91,48 @@ namespace BulletSync.Character
 		// Checks if the character is on the ground.
 		private void OnCollisionStay()
 		{
-			if (playerCharacter.GetPhotonView().IsMine)
+			if (playerCharacter != null)
 			{
+				PhotonView photonView = playerCharacter.GetPhotonView();
+				if (photonView != null)
+				{
+					if (photonView.IsMine)
+					{
+						//Bounds.
+						Bounds bounds = capsule.bounds;
+						//Extents.
+						Vector3 extents = bounds.extents;
+						//Radius.
+						float radius = extents.x - 0.01f;
 
-				//Bounds.
-				Bounds bounds = capsule.bounds;
-				//Extents.
-				Vector3 extents = bounds.extents;
-				//Radius.
-				float radius = extents.x - 0.01f;
+						//Cast. This checks whether there is indeed ground, or not.
+						Physics.SphereCastNonAlloc(bounds.center, radius, Vector3.down,
+							groundHits, extents.y - radius * 0.5f, ~0, QueryTriggerInteraction.Ignore);
 
-				//Cast. This checks whether there is indeed ground, or not.
-				Physics.SphereCastNonAlloc(bounds.center, radius, Vector3.down,
-					groundHits, extents.y - radius * 0.5f, ~0, QueryTriggerInteraction.Ignore);
+						//We can ignore the rest if we don't have any proper hits.
+						if (!groundHits.Any(hit => hit.collider != null && hit.collider != capsule))
+							return;
 
-				//We can ignore the rest if we don't have any proper hits.
-				if (!groundHits.Any(hit => hit.collider != null && hit.collider != capsule))
-					return;
+						//Store RaycastHits.
+						for (var i = 0; i < groundHits.Length; i++)
+							groundHits[i] = new RaycastHit();
 
-				//Store RaycastHits.
-				for (var i = 0; i < groundHits.Length; i++)
-					groundHits[i] = new RaycastHit();
-
-				//Set grounded. Now we know for sure that we're grounded.
-				grounded = true;
+						//Set grounded. Now we know for sure that we're grounded.
+						grounded = true;
+					}
+					else
+					{
+						Debug.LogWarning("PhotonView is not owned by the local player.");
+					}
+				}
+				else
+				{
+					Debug.LogWarning("PhotonView is null on playerCharacter.");
+				}
+			}
+			else
+			{
+				Debug.LogWarning("playerCharacter is null.");
 			}
 		}
 
